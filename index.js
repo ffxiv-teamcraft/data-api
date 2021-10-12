@@ -28,6 +28,7 @@ const getData = async (hash, contentName) => {
 
 app.get('/:hash/:contentName/:id', async (req, res) => {
     const data = await getData(req.params.hash, req.params.contentName);
+    res.set('Cache-control', 'public, max-age=31536000')
     res.json(data[+req.params.id]);
 });
 
