@@ -26,14 +26,20 @@ const getData = async (hash, contentName) => {
     }
 };
 
-app.get('/:hash/:contentName/:id', async (req, res) => {
+app.get('/:hash/:contentName/:ids', async (req, res) => {
     res.set('Access-Control-Allow-Origin', '*');
     if (req.method === 'OPTIONS') {
         res.status(200).send();
     }
     const data = await getData(req.params.hash, req.params.contentName);
     res.set('Cache-control', 'public, max-age=31536000');
-    res.json(data[+req.params.id]);
+    const resultData = req.params.ids.split(',').reduce((acc, id) => {
+        return {
+            ...acc,
+            [+id]: data[+id]
+        }
+    }, {});
+    res.json(resultData);
 });
 
 const port = process.env.PORT || 8080;
