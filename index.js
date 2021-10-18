@@ -13,17 +13,13 @@ const getData = async (hash, contentName) => {
     if (CACHE[key]) {
         return CACHE[key];
     }
-    try {
-        let baseUrl = `https://cdn.ffxivteamcraft.com/assets/data`;
-        if (contentName === 'extracts') {
-            baseUrl = `https://cdn.ffxivteamcraft.com/assets/extracts`;
-        }
-        const response = await axios.get(`${baseUrl}/${contentName}.${hash}.json`);
-        CACHE[key] = await response.data;
-        return CACHE[key];
-    } catch (error) {
-        console.log(error);
+    let baseUrl = `https://cdn.ffxivteamcraft.com/assets/data`;
+    if (contentName === 'extracts') {
+        baseUrl = `https://cdn.ffxivteamcraft.com/assets/extracts`;
     }
+    const response = await axios.get(`${baseUrl}/${contentName}.${hash}.json`);
+    CACHE[key] = await response.data;
+    return CACHE[key];
 };
 
 app.get('/:hash/:contentName/:ids', async (req, res) => {
@@ -31,15 +27,19 @@ app.get('/:hash/:contentName/:ids', async (req, res) => {
     if (req.method === 'OPTIONS') {
         res.status(200).send();
     }
-    const data = await getData(req.params.hash, req.params.contentName);
-    res.set('Cache-control', 'public, max-age=31536000');
-    const resultData = req.params.ids.split(',').reduce((acc, id) => {
-        return {
-            ...acc,
-            [+id]: data[+id]
-        }
-    }, {});
-    res.json(resultData);
+    try {
+        const data = await getData(req.params.hash, req.params.contentName);
+        res.set('Cache-control', 'public, max-age=31536000');
+        const resultData = req.params.ids.split(',').reduce((acc, id) => {
+            return {
+                ...acc,
+                [+id]: data[+id]
+            }
+        }, {});
+        res.json(resultData);
+    } catch (e) {
+        res.status(404).send();
+    }
 });
 
 const port = process.env.PORT || 8080;
